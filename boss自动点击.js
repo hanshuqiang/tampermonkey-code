@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         boss助手
 // @namespace    http://tampermonkey.net/
-// @version      2024-07-17
+// @version      v0.2
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.zhipin.com/web/geek/job-recommend
