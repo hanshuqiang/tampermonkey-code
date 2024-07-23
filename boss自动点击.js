@@ -9,25 +9,16 @@
 // @grant        none
 // ==/UserScript==
 
-// ==UserScript==
-// @name         Auto Scroll
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Automatically scroll the page
-// @author       Your Name
-// @match        https://www.example.com/*
-// @grant        none
-// ==/UserScript==
-
 (function () {
     "use strict";
   
     function liclick() {
+      console.log('初始化中...')
       let recJobList = document.getElementsByClassName("rec-job-list")[0];
       // 为 rec-job-list 元素添加点击事件监听器
       recJobList.addEventListener("click", function (event) {
-           console.log('2112',event.target.tagName)
-         console.log('22')
+         console.log('点击item',event.target.tagName)
+          
           setTimeout(() => {
             if (
               document.getElementsByClassName("op-btn-chat")[0].innerText !==
