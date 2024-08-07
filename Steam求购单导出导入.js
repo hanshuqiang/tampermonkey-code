@@ -20,13 +20,7 @@
 (function() {
     'use strict';
 
-    const closeButton = document.createElement('button');
-    closeButton.id='close_page'
-    closeButton.textContent = 'Close Window';
-    closeButton.addEventListener('click', ()=>{
-        window.close();
-    });
-    document.body.appendChild(closeButton);
+
 
 
     function convertToUnicode(str) {
@@ -37,23 +31,9 @@
         }
         return unicodeStr;
     }
-    function closeTab(){
-        if(location.href==='https://www.baidu.com/'){
-
-
-            window.close();
-        }else{
-
-            location.href='https://www.baidu.com/'
-        }
-    }
 
 
     async  function initBuyMarket(){
-
-
-
-
 
         if( localStorage.getItem('o')){
             let item = JSON.parse( localStorage.getItem('o'));
@@ -64,13 +44,19 @@
             document.getElementById('market_buy_commodity_input_price').value=item[2];
             document.getElementById('market_buy_commodity_input_quantity').value=item[3];
             document.getElementById('market_buyorder_dialog_accept_ssa').click();
-          //  document.getElementById("market_buyorder_dialog_purchase").click()//提交
+            document.getElementById("market_buyorder_dialog_purchase").click()//提交
 
-           // await new Promise(resolve => setTimeout(resolve, 5 *1000));
+            // await new Promise(resolve => setTimeout(resolve, 5 *1000));
+            function closePage(){
+                if(document.getElementById('market_buy_commodity_status').innerText ||document.getElementById('market_buyorder_dialog_error_text').innerText){
+                    localStorage.removeItem('o');
+                    localStorage.setItem('k','go');
 
-            localStorage.removeItem('o');
-            console.log('已经移除localStorage')
-          window.open('', '_self', '').close();
+                }
+            }
+            setTimeout(closePage,500)
+
+
 
         }
     }
@@ -98,6 +84,7 @@
     button2.id = "exportButto2n";
     button2.textContent = "导入";
     button2.style.padding = "5px 10px";
+    button2.style.margin = " 0 5px 0 0 ";
     button2.style.backgroundColor = "#4CAF50";
     button2.style.color = "white";
     button2.style.border = "none";
@@ -106,9 +93,28 @@
     document.querySelectorAll('.market_home_listing_table')[1].querySelector('.my_market_header').appendChild(button2);
 
 
+    var button3 = document.createElement("button");
+    button3.id = "exportButton3";
+    button3.textContent = "清空缓存";
+    button3.style.padding = "5px 10px";
+    button3.style.backgroundColor = "#4CAF50";
+    button3.style.color = "white";
+    button3.style.border = "none";
+    button3.style.borderRadius = "4px";
+    button3.style.cursor = "pointer";
+    document.querySelectorAll('.market_home_listing_table')[1].querySelector('.my_market_header').appendChild(button3);
+
+
+
     // 绑定按钮点击事件
     document.getElementById("exportButton").addEventListener("click", exportTableToCSV);
     document.getElementById("exportButto2n").addEventListener("click", uploadfile);
+    document.getElementById("exportButton3").addEventListener("click", clearCarce);
+
+    function clearCarce(){
+        localStorage.removeItem('o');
+        localStorage.removeItem('k');
+    }
 
     function exportTableToCSV(){
         let mybuyorder = document.querySelectorAll('.market_home_listing_table')[1]
@@ -164,16 +170,74 @@
             .then(async csvData => {
             let arr = convertCSVtoArray(csvData);
             console.log("CSV data:", arr);
-            for(var i= 0; i<arr.length;i++){
-                let item = arr[i];
+
+            let curIndex = 0;
+            let tableInstent = null;
+            function openNTab(){
+
+                let item = arr[curIndex];
+                console.log('当前饰品：',item)
                 let newTabUrl = 'https://steamcommunity.com/market/listings/730/'+encodeURI(item[0])
-                let newTabRes = GM.openInTab(newTabUrl,false)
-
-
                 localStorage.setItem('o',JSON.stringify(item))
-                await new Promise(resolve => setTimeout(resolve, 15 *1000));
-
+                tableInstent =  GM.openInTab(newTabUrl,false);
+                curIndex +=1;
             }
+
+
+            function checkLocalStorageValue() {
+                if (localStorage.getItem('k') === 'go') {
+
+                    if(tableInstent){
+
+                        tableInstent.then(r=>{
+                            console.log(r)
+                            tableInstent = null
+
+                            r.close()
+                        })
+
+                    }else{
+                        localStorage.removeItem('k');
+                        openNTab();
+                    }
+
+                } else {
+                    console.log('Value of "k" is not "go"');
+                }
+
+
+                let checkLocalStorageValue_TIME = setTimeout(checkLocalStorageValue, 3000);
+                if(arr.length === curIndex){
+                    console.log('清除checkLocalStorageValue')
+                    clearTimeout(checkLocalStorageValue_TIME);
+
+                    if(tableInstent){
+
+                        tableInstent.then(r=>{
+                            console.log(r)
+                            tableInstent = null
+
+                            r.close()
+                        })
+
+                    }
+
+                    GM_notification({
+                        text: "订单已导入完成，可能有部分因为网络问题导入失败，请再次核对",
+                        title: "提示",
+                        timeout: 10  * 1000, // 消失时间, 单位毫秒
+                        onClick: function() {
+                            console.log("用户点击了提示");
+                        }
+                    });
+                }
+            }
+            openNTab();
+            // 启动函数
+            checkLocalStorageValue();
+
+
+
 
 
         })
