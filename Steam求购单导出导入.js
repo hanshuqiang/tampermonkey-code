@@ -4,7 +4,8 @@
 // @version      2024-08-05
 // @description  Steam求购单导出工具，使用时需要关闭会操作求购单dom的工具，如：Steam价格转换
 // @author       You
-// @match        https://steamcommunity.com/market/*
+// @match       https://steamcommunity.com/market/*
+// @match       https://www.baidu.com/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=steamcommunity.com
 // @grant        GM_notification
 // @grant       GM.getResourceText
@@ -18,6 +19,67 @@
 
 (function() {
     'use strict';
+
+    const closeButton = document.createElement('button');
+    closeButton.id='close_page'
+    closeButton.textContent = 'Close Window';
+    closeButton.addEventListener('click', ()=>{
+        window.close();
+    });
+    document.body.appendChild(closeButton);
+
+
+    function convertToUnicode(str) {
+        let unicodeStr = '';
+        for (let i = 0; i < str.length; i++) {
+            let charCode = str.charCodeAt(i);
+            unicodeStr += "\\u" + charCode.toString(16).padStart(4, '0');
+        }
+        return unicodeStr;
+    }
+    function closeTab(){
+        if(location.href==='https://www.baidu.com/'){
+
+
+            window.close();
+        }else{
+
+            location.href='https://www.baidu.com/'
+        }
+    }
+
+
+    async  function initBuyMarket(){
+
+
+
+
+
+        if( localStorage.getItem('o')){
+            let item = JSON.parse( localStorage.getItem('o'));
+            Market_ShowBuyOrderPopup( 730, item[0],item[1] );
+            await new Promise(resolve => setTimeout(resolve,  3 *1000));
+
+            // 在新标签页的 DOM 上进行操作
+            document.getElementById('market_buy_commodity_input_price').value=item[2];
+            document.getElementById('market_buy_commodity_input_quantity').value=item[3];
+            document.getElementById('market_buyorder_dialog_accept_ssa').click();
+          //  document.getElementById("market_buyorder_dialog_purchase").click()//提交
+
+           // await new Promise(resolve => setTimeout(resolve, 5 *1000));
+
+            localStorage.removeItem('o');
+            console.log('已经移除localStorage')
+          window.open('', '_self', '').close();
+
+        }
+    }
+    initBuyMarket();
+
+    if(! document.querySelectorAll('.market_home_listing_table')[1].querySelector('.my_market_header')){
+        return false;
+    }
+
 
     // 在页面上添加一个按钮
     var button = document.createElement("button");
@@ -99,28 +161,19 @@
     function uploadfile(){
         // 读取 CSV 文件
         GM.getResourceText("myTxt1")
-            .then(csvData => {
+            .then(async csvData => {
             let arr = convertCSVtoArray(csvData);
             console.log("CSV data:", arr);
+            for(var i= 0; i<arr.length;i++){
+                let item = arr[i];
+                let newTabUrl = 'https://steamcommunity.com/market/listings/730/'+encodeURI(item[0])
+                let newTabRes = GM.openInTab(newTabUrl,false)
 
-            let newTabUrl = 'https://steamcommunity.com/market/listings/730/'+encodeURI(arr[2][0])
-            let newTab = GM.openInTab(newTabUrl,false)
 
-            GM.addValueChangeListener(newTabUrl, (newValue, oldValue) => {
-                if (newValue.includes('https://steamcommunity.com/market/listings/730/')) {
-                    // 新标签页已经加载完成，可以在这里操作 DOM
-                Market_ShowBuyOrderPopup( 730, "Sticker | ZywOo | Berlin 2019", "\u5370\u82b1 | ZywOo | 2019\u5e74\u67cf\u6797\u9526\u6807\u8d5b" );
+                localStorage.setItem('o',JSON.stringify(item))
+                await new Promise(resolve => setTimeout(resolve, 15 *1000));
 
-                    // 获取新标签页的 document 对象
-                    const newTabDocument = GM.getTab().contentDocument;
-
-                    // 在新标签页的 DOM 上进行操作
-                    newTabDocument.getElementById('market_buy_commodity_input_price').value=arr[2][2];
-                    newTabDocument.getElementById('market_buy_commodity_input_quantity').value=arr[2][3];
-                    newTabDocument.getElementById('market_buyorder_dialog_accept_ssa').click();
-                }
-            });
-
+            }
 
 
         })
