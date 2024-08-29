@@ -7,12 +7,12 @@
 // @match        https://buff.163.com/user-center/asset/
 // @match        https://buff.163.com/user-center/asset/recharge/
 // @match        https://buff.163.com/user-center/asset/withdraw/
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=163.com
+// @icon         https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjqFRDuBB24QeFyeIV8LAuabCvoz2d1vIFZD4h15NgIEKPFodEdoxmfxu_cQ&s
 // @grant        GM.xmlHttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addStyle
-// @require      https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js
+// @license MIT
 // ==/UserScript==
 
 GM_addStyle(
@@ -21,6 +21,10 @@ GM_addStyle(
 
 (function () {
   "use strict";
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
   ////增加了支付宝余额和银行卡余额，原来的位置不够了,所以宽度改成自动
   let cols = document.querySelectorAll(".user-header .col");
@@ -136,6 +140,7 @@ GM_addStyle(
 
           if (currentPage < totalPages) {
             currentPage++;
+            await delay(4000);
             await fetchPageData(); // 递归调用
           } else {
             // 所有数据获取完成
@@ -150,8 +155,8 @@ GM_addStyle(
           console.error("请求失败：", error);
         }
       }
-
-      fetchPageData();
+        
+        fetchPageData();
     }
     initDialogZfb();
     fetchAllPageData();
@@ -191,8 +196,6 @@ GM_addStyle(
               onload: (response) => resolve(response),
               onerror: (error) => reject(error),
             });
-
-         
           });
 
           const data = JSON.parse(response.responseText);
@@ -204,13 +207,9 @@ GM_addStyle(
 
           totalPages = data?.data?.total_page || 0;
 
-
-          
-
-
-
           if (currentPage < totalPages) {
             currentPage++;
+            await delay(4000);
             await fetchPageData(); // 递归调用
           } else {
             // 所有数据获取完成
@@ -242,20 +241,17 @@ GM_addStyle(
     let value1 = GM_getValue("btn_bank_config_start");
     let value2 = GM_getValue("btn_bank_config_end");
     if (value1) {
-        document.getElementById("btn_bank_config_start").value = value1.replace(
-          " 00:00:00",
-          ""
-        );
-      }
-      if (value2) {
-        document.getElementById("btn_bank_config_end").value = value2.replace(
-          " 23:59:59",
-          ""
-        );
-      }
-
-
-   
+      document.getElementById("btn_bank_config_start").value = value1.replace(
+        " 00:00:00",
+        ""
+      );
+    }
+    if (value2) {
+      document.getElementById("btn_bank_config_end").value = value2.replace(
+        " 23:59:59",
+        ""
+      );
+    }
 
     fetchAllPageData();
   }
